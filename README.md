@@ -56,3 +56,17 @@ CrediYa/
 
 ## Simplificaciones conocidas (alcance academico)
 El dinero usa `double` redondeado a 2 decimales (codigo de produccion deberia usar `BigDecimal`); solo interes simple; sin autenticacion.
+
+## Examen
+| Lo que pide la actividad | Donde esta en CrediYa |
+|---|---|
+| Clase `Prestamo` (id, clienteId, monto, interesMensual, plazoMeses, estado) | `model/Prestamo`. Agrega `empleadoId` y `fechaInicio`, que la tabla real exige |
+| `calcularTotalAPagar()` | `Prestamo` usa `Loan.calcularTotal(...)`: una sola formula para todo el sistema |
+| `GestorPrestamos` con `ArrayList`: `registrarPrestamo`, `listarPrestamos` | `service/GestorPrestamos` |
+| `DatoInvalidoException` | `exception/DatoInvalidoException` (hereda de `CrediYaException`) |
+| `guardarPrestamoEnBD` (JDBC) | `GestorPrestamos.guardarPrestamoEnBD` -> `LoanService.save` -> `LoanDAO.insert` (`PreparedStatement` + Singleton `DBConnection`) |
+| `buscarPorEstado` (Stream + Lambda) | `GestorPrestamos.buscarPorEstado` |
+| Tabla `prestamos` propuesta | Se conserva la tabla real: `interes` = interes_mensual, `cuotas` = plazo_meses, mas columnas de fechas, empleado y saldos |
+
+- **Estados:** `Activo`/`Pagado`/`Mora` en `Prestamo` equivalen a `ACTIVE`/`PAID`/`OVERDUE` en `Loan` y en MySQL.
+- **Memoria y MySQL:** `registrarPrestamo` solo agrega al `ArrayList` (se pierde al cerrar). `guardarPrestamoEnBD` lo guarda en MySQL. `cargarDesdeBD` rellena la lista desde MySQL; el menu la llama antes de listar y buscar.

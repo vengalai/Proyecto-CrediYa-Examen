@@ -3,6 +3,7 @@ package com.crediya.service;
 import com.crediya.dao.LoanDAO;
 import com.crediya.dao.PaymentDAO;
 import com.crediya.exception.CrediYaException;
+import com.crediya.exception.DatoInvalidoException;
 import com.crediya.model.Loan;
 import com.crediya.model.LoanStatus;
 import com.crediya.model.Payment;
@@ -23,10 +24,7 @@ public class PaymentService {
         this.loanDAO = loanDAO;
     }
 
-    /**
-     * Registers a payment. The payment INSERT and the loan UPDATE run in one
-     * database transaction: both succeed or both are rolled back.
-     */
+
     public Payment registerPayment(int loanId, double amount, LocalDate date) {
         Loan loan = findLoan(loanId);
         if (loan.getOutstandingBalance() < 0.01)
@@ -37,6 +35,14 @@ public class PaymentService {
             throw new CrediYaException("The payment exceeds the outstanding balance ("
                     + MoneyUtil.format(loan.getOutstandingBalance()) + ").");
 
+        if (date == null)
+            throw new DatoInvalidoException("The payment date is required.");
+        if (date.isBefore(loan.getStartDate()))
+            throw new DatoInvalidoException("The payment date cannot be before the loan start date ("
+                    + loan.getStartDate() + ").");
+        if (date.isAfter(LocalDate.now()))
+            throw new DatoInvalidoException("The payment date cannot be in the future.");
+
         double newBalance = MoneyUtil.round2(loan.getOutstandingBalance() - amount);
         if (newBalance < 0.01) newBalance = 0;
         Payment payment = new Payment(0, loanId, amount, date, newBalance);
@@ -44,7 +50,7 @@ public class PaymentService {
         Connection conn = null;
         try {
             conn = DBConnection.getInstance().getConnection();
-            conn.setAutoCommit(false);                       // start transaction
+            conn.setAutoCommit(false);
 
             payment.setId(paymentDAO.insert(payment));
             loan.setOutstandingBalance(newBalance);
@@ -52,7 +58,7 @@ public class PaymentService {
             loan.setStatus(newStatus);
             loanDAO.updateBalanceAndStatus(loanId, newBalance, newStatus);
 
-            conn.commit();                                   // both operations saved
+            conn.commit();
         } catch (SQLException ex) {
             rollback(conn);
             throw new CrediYaException("Payment could not be saved: " + ex.getMessage(), ex);
@@ -67,7 +73,7 @@ public class PaymentService {
     }
 
     public List<Payment> historyByLoan(int loanId) {
-        findLoan(loanId);   // makes sure the loan exists
+        findLoan(loanId);
         try {
             return paymentDAO.findByLoanId(loanId);
         } catch (SQLException ex) {

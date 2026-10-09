@@ -4,6 +4,7 @@ import com.crediya.dao.ClientDAO;
 import com.crediya.dao.EmployeeDAO;
 import com.crediya.dao.LoanDAO;
 import com.crediya.exception.CrediYaException;
+import com.crediya.exception.DatoInvalidoException;
 import com.crediya.model.Loan;
 import com.crediya.model.LoanStatus;
 import com.crediya.util.FileManager;
@@ -26,10 +27,7 @@ public class LoanService {
         this.calculator = calculator;
     }
 
-    /**
-     * Validates the data and calculates interest, total and installment.
-     * The loan is NOT saved yet, so the user can review it before confirming.
-     */
+
     public Loan buildLoan(int clientId, int employeeId, double monto, double tasaMensual,
                           int cuotas, LocalDate fechaInicio) {
         try {
@@ -44,14 +42,16 @@ public class LoanService {
         } catch (SQLException ex) {
             throw new CrediYaException("Database error while validating loan: " + ex.getMessage(), ex);
         }
-        if (monto <= 0)                       throw new CrediYaException("Principal must be positive.");
-        if (tasaMensual <= 0 || tasaMensual > 20) throw new CrediYaException("Monthly rate must be between 0 and 20%.");
-        if (cuotas < 1 || cuotas > 120)   throw new CrediYaException("Term must be between 1 and 120 months.");
+        if (monto <= 0)                       throw new DatoInvalidoException("Principal must be positive.");
+        if (tasaMensual <= 0 || tasaMensual > 20) throw new DatoInvalidoException("Monthly rate must be between 0 and 20%.");
+        if (cuotas < 1 || cuotas > 120)   throw new DatoInvalidoException("Term must be between 1 and 120 months.");
 
         double interest = calculator.calculateInterest(monto, tasaMensual, cuotas);
         double total = MoneyUtil.round2(monto + interest);
         double installment = MoneyUtil.round2(total / cuotas);
-        return new Loan(0, clientId, employeeId, monto, tasaMensual, cuotas, fechaInicio, LoanStatus.ACTIVE);
+        Loan loan = new Loan(0, clientId, employeeId, monto, tasaMensual, cuotas, fechaInicio, LoanStatus.ACTIVE);
+        loan.setStatus(loan.computeStatus(LocalDate.now()));   // fecha de inicio pasada -> el prestamo nace vencido
+        return loan;
     }
 
     public Loan save(Loan loan) {

@@ -29,14 +29,20 @@ public class Loan {
         this.termMonths = termMonths;
         this.startDate = startDate;
         this.status = status;
-        this.outstandingBalance = principal;
         recalculate();
+        this.outstandingBalance = totalAmount;
     }
 
     private void recalculate() {
         totalInterest = MoneyUtil.round2(principal * (monthlyRate / 100.0) * termMonths);
-        totalAmount = MoneyUtil.round2(principal + totalInterest);
+        totalAmount = calcularTotal(principal, monthlyRate, termMonths);
         monthlyInstallment = MoneyUtil.round2(totalAmount / termMonths);
+    }
+
+
+    public static double calcularTotal(double monto, double tasaMensual, int meses) {
+        double interes = MoneyUtil.round2(monto * (tasaMensual / 100.0) * meses);
+        return MoneyUtil.round2(monto + interes);
     }
 
     // ---- getters / setters ----

@@ -67,7 +67,6 @@ public class LoanDAO implements GenericDAO<Loan> {
         return list;
     }
 
-    /** Used after a payment: updates the balance and the status together. */
     public void updateBalanceAndStatus(int loanId, double balance, LoanStatus status) throws SQLException {
         String sql = "UPDATE prestamos SET outstanding_balance = ?, estado = ? WHERE id = ?";
         try (PreparedStatement ps = conn().prepareStatement(sql)) {
@@ -87,8 +86,11 @@ public class LoanDAO implements GenericDAO<Loan> {
     }
 
     private Loan map(ResultSet rs) throws SQLException {
-        return new Loan(rs.getInt("id"), rs.getInt("cliente_id"), rs.getInt("empleado_id"),
+        Loan loan = new Loan(rs.getInt("id"), rs.getInt("cliente_id"), rs.getInt("empleado_id"),
                 rs.getDouble("monto"), rs.getDouble("interes"), rs.getInt("cuotas"),
                 rs.getDate("fecha_inicio").toLocalDate(), LoanStatus.valueOf(rs.getString("estado")));
+        double saldo = rs.getDouble("outstanding_balance");
+        if (!rs.wasNull()) loan.setOutstandingBalance(saldo);  
+        return loan;
     }
 }

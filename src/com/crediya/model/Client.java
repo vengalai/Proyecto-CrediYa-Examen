@@ -23,7 +23,7 @@ public class Client extends Person {
 
     @Override
     public String describe() {
-        return String.format("%-4d %-24s %-12s %-12s %-28s %-26s loans: %d",
+        return String.format("%-4d %-24s %-12s %-12s %-28s %d",
                 getId(), getName(), getDocument(), phone, email, loans.size());
     }
 

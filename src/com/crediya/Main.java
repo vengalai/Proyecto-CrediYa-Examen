@@ -7,6 +7,7 @@ import com.crediya.dao.PaymentDAO;
 import com.crediya.exception.CrediYaException;
 import com.crediya.service.ClientService;
 import com.crediya.service.EmployeeService;
+import com.crediya.service.GestorPrestamos;
 import com.crediya.service.LoanService;
 import com.crediya.service.PaymentService;
 import com.crediya.service.ReportService;
@@ -15,7 +16,7 @@ import com.crediya.util.DBConnection;
 import com.crediya.util.FileManager;
 import com.crediya.view.*;
 import java.sql.SQLException;
-/** Entry point: checks the database, builds every object (manual dependency injection) and starts the menu. */
+
 public class Main {
     public static void main(String[] args) {
         System.out.println("CrediYa - connecting to MySQL...");
@@ -28,18 +29,17 @@ public class Main {
             return;
         }
 
-        // DAOs
         EmployeeDAO employeeDAO = new EmployeeDAO();
         ClientDAO clientDAO = new ClientDAO();
         LoanDAO loanDAO = new LoanDAO();
         PaymentDAO paymentDAO = new PaymentDAO();
 
-        // Services
         EmployeeService employeeService = new EmployeeService(employeeDAO);
         ClientService clientService = new ClientService(clientDAO, loanDAO);
         LoanService loanService = new LoanService(loanDAO, clientDAO, employeeDAO, new SimpleInterestCalculator());
         PaymentService paymentService = new PaymentService(paymentDAO, loanDAO);
         ReportService reportService = new ReportService(loanService, clientService);
+        GestorPrestamos gestorPrestamos = new GestorPrestamos(loanService);
 
         try {
             int changed = loanService.refreshStatuses();
@@ -49,11 +49,10 @@ public class Main {
         }
         FileManager.log("Application started");
 
-        // Views
         MainMenu menu = new MainMenu(
                 new EmployeeMenu(employeeService),
                 new ClientMenu(clientService),
-                new LoanMenu(loanService, clientService, employeeService),
+                new LoanMenu(loanService, clientService, employeeService, gestorPrestamos),
                 new PaymentMenu(paymentService, loanService),
                 new ReportMenu(reportService));
         menu.run();
