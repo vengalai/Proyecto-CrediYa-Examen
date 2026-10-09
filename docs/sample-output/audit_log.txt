@@ -1,0 +1,6 @@
+[2026-10-01 15:26:30] Application started
+[2026-10-01 15:26:30] Employee registered: #1 Carlos Ramirez
+[2026-10-01 15:26:30] Client registered: #1 Maria Fernanda Lopez
+[2026-10-01 15:26:30] Loan created: #1 client #1 by employee #1 total $1,200,000.00
+[2026-10-01 15:26:30] Payment #1 of $120,000.00 on loan #1, new balance $1,080,000.00
+[2026-10-01 15:26:30] Application closed

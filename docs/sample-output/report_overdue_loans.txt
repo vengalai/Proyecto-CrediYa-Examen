@@ -1,0 +1,2 @@
+=== OVERDUE LOANS (sample) ===
+Loan #1   | principal $1,000,000.00   |  2.00% x 10 m | installment $120,000.00    | balance $1,080,000.00   | next due 2026-03-15 | ACTIVE | 168 days late
